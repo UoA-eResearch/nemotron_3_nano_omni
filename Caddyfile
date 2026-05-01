@@ -1,0 +1,9 @@
+ai.cer-sandbox.cloud.edu.au {
+        @api {
+                path /v1* /tokenize /detokenize /load /version /health /metrics /ping /invocations /inference/* /scale_elastic_ep /is_scaling_elastic_ep /generative_scoring /docs /openapi.json
+        }
+        # VLLM backend
+        reverse_proxy @api vllm:8000
+        # OpenWebUI
+        reverse_proxy open-webui:8080
+}

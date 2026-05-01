@@ -1,0 +1,109 @@
+services:
+  vllm:
+    image: vllm/vllm-openai:v0.20.0
+    container_name: vllm-nemotron-omni
+    ports:
+      - "8000:8000"
+    volumes:
+      - /mnt/Nemotron-3-Nano-Omni-30B-A3B-Reasoning-BF16:/model:ro
+    environment:
+      - NVIDIA_VISIBLE_DEVICES=all
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+    ipc: "host"
+    shm_size: "16gb"
+    entrypoint: >
+      bash -c "pip install vllm[audio] && vllm serve /model
+      --served-model-name=nemotron_3_nano_omni
+      --max-num-seqs 8
+      --max-model-len 131072
+      --port 8000
+      --trust-remote-code
+      --gpu-memory-utilization .9
+      --limit-mm-per-prompt '{\"video\": 1, \"image\": 1, \"audio\": 1}'
+      --media-io-kwargs '{\"video\": {\"fps\": 2, \"num_frames\": 256}}'
+      --allowed-local-media-path=/
+      --enable-prefix-caching
+      --max-num-batched-tokens 32768
+      --reasoning-parser nemotron_v3
+      --enable-auto-tool-choice
+      --tool-call-parser qwen3_coder"
+    restart: always
+
+  caddy:
+    image: caddy:latest
+    container_name: caddy-reverse-proxy
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data
+      - caddy-config:/config
+    depends_on:
+      - vllm
+      - open-webui
+    restart: always
+
+  open-webui:
+    image: ghcr.io/open-webui/open-webui:main
+    container_name: open-webui
+    ports:
+      - "8080:8080"
+    volumes:
+      - open-webui:/app/backend/data
+    environment:
+      - OPENAI_API_BASE_URL=http://vllm:8000/v1
+      - OPENAI_API_BASE_URL=http://hermes:8642/v1
+      - WEBUI_AUTH=False
+      - ENABLE_CHAT_RESPONSE_BASE64_IMAGE_URL_CONVERSION=True
+    restart: always
+
+  hermes:
+    image: nousresearch/hermes-agent:latest
+    container_name: hermes
+    restart: unless-stopped
+    #entrypoint: apt install python-is-python3 python3-pip && rm /usr/lib/python3.13/EXTERNALLY-MANAGED && /usr/bin/tini -g -- /opt/hermes/docker/entrypoint.sh
+    command: gateway run
+    ports:
+      - "8642:8642"
+    volumes:
+      - ~/.hermes:/opt/data
+    environment:
+       - API_SERVER_ENABLED=true
+       - API_SERVER_HOST=0.0.0.0
+       - API_SERVER_KEY=your-secret-key
+    shm_size: '2gb'
+    deploy:
+      resources:
+        limits:
+          memory: 32G
+
+  dashboard:
+    image: nousresearch/hermes-agent:latest
+    container_name: hermes-dashboard
+    restart: unless-stopped
+    command: dashboard --host 0.0.0.0 --insecure
+    ports:
+      - "9119:9119"
+    volumes:
+      - ~/.hermes:/opt/data
+    environment:
+      - GATEWAY_HEALTH_URL=http://hermes:8642
+    depends_on:
+      - hermes
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+          cpus: "0.5"
+
+volumes:
+  open-webui:
+  caddy-data:
+  caddy-config:
