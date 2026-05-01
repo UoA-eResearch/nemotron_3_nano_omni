@@ -60,9 +60,18 @@ services:
     environment:
       - OPENAI_API_BASE_URL=http://vllm:8000/v1
       - OPENAI_API_BASE_URL=http://hermes:8642/v1
+      - PDF_EXTRACT_IMAGES=True
+      - PDF_LOADER_MODE=page
       - WEBUI_AUTH=False
       - ENABLE_CHAT_RESPONSE_BASE64_IMAGE_URL_CONVERSION=True
     restart: always
+
+  tika:
+    image: apache/tika:latest-full
+    container_name: tika
+    ports:
+      - "9998:9998"
+    restart: unless-stopped
 
   hermes:
     image: nousresearch/hermes-agent:latest
