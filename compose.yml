@@ -51,7 +51,7 @@ services:
     restart: always
 
   open-webui:
-    image: ghcr.io/open-webui/open-webui:main
+    image: ghcr.io/uoa-eresearch/open-webui:main
     container_name: open-webui
     ports:
       - "8080:8080"
@@ -65,13 +65,6 @@ services:
       - WEBUI_AUTH=False
       - ENABLE_CHAT_RESPONSE_BASE64_IMAGE_URL_CONVERSION=True
     restart: always
-
-  tika:
-    image: apache/tika:latest-full
-    container_name: tika
-    ports:
-      - "9998:9998"
-    restart: unless-stopped
 
   hermes:
     image: nousresearch/hermes-agent:latest
