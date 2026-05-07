@@ -21,11 +21,10 @@ services:
       bash -c "pip install vllm[audio] && vllm serve /model
       --served-model-name=nemotron_3_nano_omni
       --max-num-seqs 8
-      --max-model-len 131072
+      --max-model-len 262144
       --port 8000
       --trust-remote-code
       --gpu-memory-utilization .9
-      --limit-mm-per-prompt '{\"video\": 1, \"image\": 1, \"audio\": 1}'
       --media-io-kwargs '{\"video\": {\"fps\": 2, \"num_frames\": 256}}'
       --allowed-local-media-path=/
       --enable-prefix-caching
@@ -51,7 +50,8 @@ services:
     restart: always
 
   open-webui:
-    image: ghcr.io/uoa-eresearch/open-webui:main
+    #image: ghcr.io/uoa-eresearch/open-webui:main
+    image: ghcr.io/uoa-eresearch/open-webui:copilot-adjust-mandelbrot-set-plotting
     container_name: open-webui
     ports:
       - "8080:8080"
