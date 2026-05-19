@@ -1,7 +1,7 @@
 services:
   vllm:
     image: vllm/vllm-openai:v0.20.0
-    container_name: vllm-nemotron-omni
+    container_name: vllm
     ports:
       - "8000:8000"
     volumes:
@@ -67,13 +67,14 @@ services:
     restart: always
 
   hermes:
-    image: nousresearch/hermes-agent:latest
+    image: ghcr.io/neon-ninja/hermes-agent
     container_name: hermes
     restart: unless-stopped
     #entrypoint: apt install python-is-python3 python3-pip && rm /usr/lib/python3.13/EXTERNALLY-MANAGED && /usr/bin/tini -g -- /opt/hermes/docker/entrypoint.sh
     command: gateway run
     ports:
       - "8642:8642"
+      - "8644:8644"
     volumes:
       - ~/.hermes:/opt/data
     environment:
