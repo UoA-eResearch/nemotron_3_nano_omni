@@ -1,6 +1,6 @@
 services:
   vllm:
-    image: vllm/vllm-openai:v0.20.0
+    image: vllm/vllm-openai
     container_name: vllm
     ports:
       - "8000:8000"
@@ -25,7 +25,7 @@ services:
       --port 8000
       --trust-remote-code
       --gpu-memory-utilization .9
-      --media-io-kwargs '{\"video\": {\"fps\": 2, \"num_frames\": 256}}'
+      --media-io-kwargs '{\"video\": {\"fps\": 2, \"num_frames\": 360, \"backend\": \"pyav\"}}'
       --allowed-local-media-path=/
       --enable-prefix-caching
       --max-num-batched-tokens 32768
@@ -50,8 +50,7 @@ services:
     restart: always
 
   open-webui:
-    #image: ghcr.io/uoa-eresearch/open-webui:main
-    image: ghcr.io/uoa-eresearch/open-webui:copilot-adjust-mandelbrot-set-plotting
+    image: ghcr.io/uoa-eresearch/open-webui:main
     container_name: open-webui
     ports:
       - "8080:8080"
